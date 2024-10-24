@@ -1,24 +1,18 @@
-package org.douglasalvarado.model;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+package org.douglasalvarado.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Data
-@Document(collection = "Reserva")
-public class Reserva {
+public class ReservaDto {
 
-    @Id
     private String id;
     private String idUsuario;
     private String fecha;
     private String descripcion;
-
 }

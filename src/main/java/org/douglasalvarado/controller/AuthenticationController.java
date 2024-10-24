@@ -2,58 +2,58 @@ package org.douglasalvarado.controller;
 
 import org.douglasalvarado.dto.LoginDto;
 import org.douglasalvarado.dto.RegisterDto;
-import org.douglasalvarado.model.Usuario;
-import org.douglasalvarado.repository.UsuarioRepository;
+import org.douglasalvarado.dto.UsuarioDto;
 import org.douglasalvarado.service.UsuarioService;
 import org.douglasalvarado.util.JWTUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
 @RestController
 @RequestMapping("/authentication")
+@RequiredArgsConstructor
 public class AuthenticationController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private UsuarioService usuarioService;
-    @Autowired
-    private JWTUtil jwtUtil;
+    private final AuthenticationManager authenticationManager;
+    private final PasswordEncoder passwordEncoder;
+    private final UsuarioService usuarioService;
+    private final JWTUtil jwtUtil;
 
     @PostMapping("/login")
-    public String authenticate(@RequestBody LoginDto loginDto) {
+    public ResponseEntity<String> authenticate(@RequestBody LoginDto loginDto) {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword()));
-            return jwtUtil.generateToken(loginDto.getEmail());
+            String token = jwtUtil.generateToken(loginDto.getEmail());
+            return ResponseEntity.ok(token);
         } catch (AuthenticationException e) {
-            return "Authentication failed!";
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed!"); 
         }
     }
 
-
     @PostMapping("/register")
-    public String register(@RequestBody RegisterDto registerDto) {
+    public ResponseEntity<String> register(@RequestBody RegisterDto registerDto) {
         if (usuarioService.existsByCorreo(registerDto.getEmail())) {
-            return "Email already exists!";
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists!"); 
         }
-        
+
         if (!registerDto.getPassword().equals(registerDto.getConfirmPassword())) {
-            return "Passwords do not match!";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Passwords do not match!"); 
         }
 
         String encodedPassword = passwordEncoder.encode(registerDto.getPassword());
 
-        Usuario newUser = new Usuario();
+        UsuarioDto newUser = new UsuarioDto();
         newUser.setCorreo(registerDto.getEmail());
         newUser.setPassword(encodedPassword);
         usuarioService.createUsuario(newUser);
 
-        return "User registered successfully!";
+        return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully!");
     }
 }

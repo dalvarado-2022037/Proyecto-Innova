@@ -1,5 +1,6 @@
 package org.douglasalvarado.service;
 
+import org.douglasalvarado.dto.UsuarioDto;
 import org.douglasalvarado.model.Usuario;
 import org.douglasalvarado.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
@@ -15,24 +16,25 @@ public class UsuarioService {
         this.usuarioRepository = usuarioRepository;
     }
 
-    public Usuario createUsuario(Usuario usuario) {
-        return usuarioRepository.save(usuario);
+    public UsuarioDto createUsuario(UsuarioDto usuarioDto) {
+        return toDto(usuarioRepository.save(toModel(usuarioDto)));
     }
 
-    public Usuario getUsuario(String id) {
-        return usuarioRepository.findById(id).orElse(null);
+    public UsuarioDto getUsuario(String id) {
+        return toDto(usuarioRepository.findById(id).orElse(null));
     }
 
-    public List<Usuario> getAllUsuarios() {
-        return usuarioRepository.findAll();
+    public List<UsuarioDto> getAllUsuarios() {
+        return usuarioRepository.findAll().stream()
+            .map(this::toDto).toList();
     }
 
-    public Usuario updateUsuario(String id, Usuario usuario) {
+    public UsuarioDto updateUsuario(String id, UsuarioDto usuarioDto) {
         Usuario usuarioExistente = usuarioRepository.findById(id).orElse(null);
         if (usuarioExistente != null) {
-            usuarioExistente.setNombre(usuario.getNombre());
-            usuarioExistente.setCorreo(usuario.getCorreo());
-            return usuarioRepository.save(usuarioExistente);
+            usuarioExistente.setNombre(usuarioDto.getNombre());
+            usuarioExistente.setCorreo(usuarioDto.getCorreo());
+            return toDto(usuarioRepository.save(usuarioExistente));
         }
         return null;
     }
@@ -43,5 +45,23 @@ public class UsuarioService {
 
     public boolean existsByCorreo(String email){
         return usuarioRepository.existsByCorreo(email);
+    }
+
+    public Usuario toModel(UsuarioDto usuarioDto){
+        return Usuario.builder()
+            .id(usuarioDto.getId())
+            .correo(usuarioDto.getCorreo())
+            .nombre(usuarioDto.getNombre())
+            .password(usuarioDto.getPassword())
+            .build();
+    }
+
+    public UsuarioDto toDto(Usuario usuario){
+        return UsuarioDto.builder()
+            .id(usuario.getId())
+            .correo(usuario.getCorreo())
+            .nombre(usuario.getNombre())
+            .password(usuario.getPassword())
+            .build();
     }
 }
