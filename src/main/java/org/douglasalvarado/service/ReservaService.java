@@ -3,9 +3,7 @@ package org.douglasalvarado.service;
 import org.douglasalvarado.model.Reserva;
 import org.douglasalvarado.repository.ReservaRepository;
 import org.springframework.stereotype.Service;
-import java.util.HashMap;
 import java.util.List;
-import java.util.ArrayList;
 
 @Service
 public class ReservaService {
@@ -20,7 +18,7 @@ public class ReservaService {
         return reservaRepository.save(reserva);
     }
 
-    public Reserva getReserva(Long id) {
+    public Reserva getReserva(String id) {
         return reservaRepository.findById(id).orElse(null);
     }
 
@@ -28,7 +26,7 @@ public class ReservaService {
         return reservaRepository.findAll();
     }
 
-    public Reserva updateReserva(Long id, Reserva reserva) {
+    public Reserva updateReserva(String id, Reserva reserva) {
         Reserva reservaExistente = reservaRepository.findById(id).orElse(null);
         if (reservaExistente != null) {
             reservaExistente.setFecha(reserva.getFecha());
@@ -38,7 +36,7 @@ public class ReservaService {
         return null;
     }
 
-    public void deleteReserva(Long id) {
+    public void deleteReserva(String id) {
         reservaRepository.deleteById(id);
     }
 }

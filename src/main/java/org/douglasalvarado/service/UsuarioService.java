@@ -19,7 +19,7 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
-    public Usuario getUsuario(Long id) {
+    public Usuario getUsuario(String id) {
         return usuarioRepository.findById(id).orElse(null);
     }
 
@@ -27,7 +27,7 @@ public class UsuarioService {
         return usuarioRepository.findAll();
     }
 
-    public Usuario updateUsuario(Long id, Usuario usuario) {
+    public Usuario updateUsuario(String id, Usuario usuario) {
         Usuario usuarioExistente = usuarioRepository.findById(id).orElse(null);
         if (usuarioExistente != null) {
             usuarioExistente.setNombre(usuario.getNombre());
@@ -37,7 +37,7 @@ public class UsuarioService {
         return null;
     }
 
-    public void deleteUsuario(Long id) {
+    public void deleteUsuario(String id) {
         usuarioRepository.deleteById(id);
     }
 }

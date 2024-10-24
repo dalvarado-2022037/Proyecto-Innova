@@ -1,9 +1,9 @@
 package org.douglasalvarado.repository;
 
 import org.douglasalvarado.model.Reserva;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ReservaRepository extends JpaRepository<Reserva, Long> {
+public interface ReservaRepository extends MongoRepository<Reserva, String> {
 }

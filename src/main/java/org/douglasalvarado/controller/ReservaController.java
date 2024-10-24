@@ -21,7 +21,7 @@ public class ReservaController {
     }
 
     @GetMapping("/find-by/{id}")
-    public Reserva getReserva(@PathVariable Long id) {
+    public Reserva getReserva(@PathVariable String id) {
         return reservaService.getReserva(id);
     }
 
@@ -31,12 +31,12 @@ public class ReservaController {
     }
 
     @PutMapping("/update/{id}")
-    public Reserva updateReserva(@PathVariable Long id, @RequestBody Reserva reserva) {
+    public Reserva updateReserva(@PathVariable String id, @RequestBody Reserva reserva) {
         return reservaService.updateReserva(id, reserva);
     }
 
     @DeleteMapping("/delete/{id}")
-    public void deleteReserva(@PathVariable Long id) {
+    public void deleteReserva(@PathVariable String id) {
         reservaService.deleteReserva(id);
     }
 }
