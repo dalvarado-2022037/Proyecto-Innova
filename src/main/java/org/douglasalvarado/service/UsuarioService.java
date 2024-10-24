@@ -40,4 +40,8 @@ public class UsuarioService {
     public void deleteUsuario(String id) {
         usuarioRepository.deleteById(id);
     }
+
+    public boolean existsByCorreo(String email){
+        return usuarioRepository.existsByCorreo(email);
+    }
 }
