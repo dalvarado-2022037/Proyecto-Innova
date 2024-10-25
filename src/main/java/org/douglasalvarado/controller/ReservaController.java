@@ -24,8 +24,8 @@ public class ReservaController {
     @PostMapping("/reservar")
     public ResponseEntity<ReservaDto> createReserva(@RequestBody ReservaDto reserva) {
         try {
+            bookService.reservarBook(reserva.getBookId(), true);
             ReservaDto createdReserva = reservaService.createReserva(reserva);
-            bookService.reservarBook(createdReserva.getBookId(), true);
             return ResponseEntity.ok(createdReserva);
         } catch (Exception e) {
             return ResponseEntity.status(500).build();
