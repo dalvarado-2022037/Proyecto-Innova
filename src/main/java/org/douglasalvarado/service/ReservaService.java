@@ -46,6 +46,7 @@ public class ReservaService {
         return Reserva.builder()
             .id(reservaDto.getId())
             .idUsuario(reservaDto.getIdUsuario())
+            .bookId(reservaDto.getBookId())
             .fecha(reservaDto.getFecha())
             .descripcion(reservaDto.getDescripcion())
             .build();
@@ -55,6 +56,7 @@ public class ReservaService {
         return ReservaDto.builder()
             .id(reserva.getId())
             .idUsuario(reserva.getIdUsuario())
+            .bookId(reserva.getBookId())
             .fecha(reserva.getFecha())
             .descripcion(reserva.getDescripcion())
             .build();

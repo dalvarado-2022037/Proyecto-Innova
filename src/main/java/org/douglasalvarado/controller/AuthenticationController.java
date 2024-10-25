@@ -50,6 +50,7 @@ public class AuthenticationController {
         String encodedPassword = passwordEncoder.encode(registerDto.getPassword());
 
         UsuarioDto newUser = new UsuarioDto();
+        newUser.setNombre(registerDto.getName());
         newUser.setCorreo(registerDto.getEmail());
         newUser.setPassword(encodedPassword);
         usuarioService.createUsuario(newUser);

@@ -9,11 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ReservaDto {
-
-    private String id;
-    private String idUsuario;
+public class CancelBookDto {
     private Integer bookId;
-    private String fecha;
-    private String descripcion;
 }

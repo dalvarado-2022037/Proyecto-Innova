@@ -1,6 +1,9 @@
 package org.douglasalvarado.controller;
 
+import org.douglasalvarado.dto.BookDto;
+import org.douglasalvarado.dto.CancelBookDto;
 import org.douglasalvarado.dto.ReservaDto;
+import org.douglasalvarado.service.BookService;
 import org.douglasalvarado.service.ReservaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,12 +19,24 @@ import java.util.Optional;
 public class ReservaController {
 
     private final ReservaService reservaService;
+    private final BookService bookService;
 
-    @PostMapping("/create")
+    @PostMapping("/reservar")
     public ResponseEntity<ReservaDto> createReserva(@RequestBody ReservaDto reserva) {
         try {
             ReservaDto createdReserva = reservaService.createReserva(reserva);
+            bookService.reservarBook(createdReserva.getBookId(), true);
             return ResponseEntity.ok(createdReserva);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    @PostMapping("/devolver")
+    public ResponseEntity<BookDto> updateReserva(@RequestBody CancelBookDto calcelBook) {
+        try {
+            BookDto bookDto = bookService.reservarBook(calcelBook.getBookId(), false);
+            return ResponseEntity.ok(bookDto);
         } catch (Exception e) {
             return ResponseEntity.status(500).build();
         }

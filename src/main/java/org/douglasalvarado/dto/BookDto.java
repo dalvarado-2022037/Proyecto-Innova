@@ -9,11 +9,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ReservaDto {
-
-    private String id;
-    private String idUsuario;
-    private Integer bookId;
-    private String fecha;
-    private String descripcion;
+public class BookDto {
+    private Long id;
+    private String title;
+    private String author;
+    private String isbn;
+    private Boolean available;
 }

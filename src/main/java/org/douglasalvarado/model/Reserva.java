@@ -18,6 +18,7 @@ public class Reserva {
     @Id
     private String id;
     private String idUsuario;
+    private Integer bookId;
     private String fecha;
     private String descripcion;
 
