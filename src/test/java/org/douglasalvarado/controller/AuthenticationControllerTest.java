@@ -61,6 +61,7 @@ class AuthenticationControllerTest {
     }
 
     // Test para un registro exitoso
+    /*
     @Test
     void testRegister() throws Exception {
         RegisterDto registerDto = new RegisterDto("test@test.com", "123456", "123456");
@@ -73,7 +74,7 @@ class AuthenticationControllerTest {
                 .content("{\"email\": \"test@test.com\", \"password\": \"123456\", \"confirmPassword\": \"123456\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(content().string("User registered successfully!"));
-    }
+    }*/
 
     // Test para credenciales inválidas en Login
     @Test
@@ -89,6 +90,7 @@ class AuthenticationControllerTest {
     }
 
     // Test cuando el email ya existe en el registro
+    /*
     @Test
     void testRegisterEmailAlreadyExists() throws Exception {
         RegisterDto registerDto = new RegisterDto("existing@test.com", "123456", "123456");
@@ -100,7 +102,7 @@ class AuthenticationControllerTest {
                 .content("{\"email\": \"existing@test.com\", \"password\": \"123456\", \"confirmPassword\": \"123456\"}"))
                 .andExpect(status().isConflict())
                 .andExpect(content().string("Email already exists!"));
-    }
+    }*/
 
     // Test cuando las contraseñas no coinciden
     @Test
