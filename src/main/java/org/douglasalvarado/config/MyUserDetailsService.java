@@ -25,7 +25,7 @@ public class MyUserDetailsService implements UserDetailsService {
 
         return User.withUsername(usuario.getCorreo())
                 .password(usuario.getPassword())
-                .authorities(Collections.emptyList()) // Añade roles si es necesario
+                .authorities(Collections.emptyList())
                 .build();
     }
 }

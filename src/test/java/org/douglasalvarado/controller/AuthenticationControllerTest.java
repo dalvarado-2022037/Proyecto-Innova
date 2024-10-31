@@ -61,20 +61,19 @@ class AuthenticationControllerTest {
     }
 
     // Test para un registro exitoso
-    /*
     @Test
     void testRegister() throws Exception {
-        RegisterDto registerDto = new RegisterDto("test@test.com", "123456", "123456");
+        RegisterDto registerDto = new RegisterDto("Test", "test@test.com", "123456", "123456");
 
         when(usuarioService.existsByCorreo(registerDto.getEmail())).thenReturn(false);
         when(passwordEncoder.encode(registerDto.getPassword())).thenReturn("hashed_password");
 
         mockMvc.perform(post("/authentication/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"email\": \"test@test.com\", \"password\": \"123456\", \"confirmPassword\": \"123456\"}"))
+                .content("{\"name\": \"Test\", \"email\": \"test@test.com\", \"password\": \"123456\", \"confirmPassword\": \"123456\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(content().string("User registered successfully!"));
-    }*/
+    }
 
     // Test para credenciales inválidas en Login
     @Test
@@ -90,19 +89,18 @@ class AuthenticationControllerTest {
     }
 
     // Test cuando el email ya existe en el registro
-    /*
     @Test
     void testRegisterEmailAlreadyExists() throws Exception {
-        RegisterDto registerDto = new RegisterDto("existing@test.com", "123456", "123456");
+        RegisterDto registerDto = new RegisterDto("Exist", "existing@test.com", "123456", "123456");
 
         when(usuarioService.existsByCorreo(registerDto.getEmail())).thenReturn(true);
 
         mockMvc.perform(post("/authentication/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"email\": \"existing@test.com\", \"password\": \"123456\", \"confirmPassword\": \"123456\"}"))
+                .content("{\"name\": \"Exist\", \"email\": \"existing@test.com\", \"password\": \"123456\", \"confirmPassword\": \"123456\"}"))
                 .andExpect(status().isConflict())
                 .andExpect(content().string("Email already exists!"));
-    }*/
+    }
 
     // Test cuando las contraseñas no coinciden
     @Test

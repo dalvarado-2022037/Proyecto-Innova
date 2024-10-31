@@ -23,8 +23,9 @@ public class BookService {
             .map(this::toDto).toList();
     }
 
-    public BookDto findByBook(Integer id){
-        return toDto(bookRepository.findById(id).orElse(null));
+    public BookDto findByBook(Integer id) {
+        Book book = bookRepository.findById(id).orElse(null);
+        return book != null ? toDto(book) : null;
     }
 
     public BookDto updateBook(BookDto bookDto, Integer id){
@@ -45,13 +46,15 @@ public class BookService {
         }
     }
 
-    public BookDto reservarBook(Integer id, boolean reserva){
+    public BookDto reservarBook(Integer id, boolean reserva) {
         Book bookExist = bookRepository.findById(id).orElse(null);
         if (bookExist != null) {
             bookExist.setAvailable(reserva);
+            return toDto(bookExist); 
         }
-        return toDto(bookExist);
+        return null;
     }
+    
 
     public Book toModel(BookDto bookDto){
         return Book.builder()

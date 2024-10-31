@@ -1,6 +1,8 @@
 package org.douglasalvarado.controller;
 
+import org.douglasalvarado.dto.BookDto;
 import org.douglasalvarado.dto.ReservaDto;
+import org.douglasalvarado.service.BookService;
 import org.douglasalvarado.service.ReservaService;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -14,7 +16,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -24,6 +29,9 @@ class ReservaControllerTest {
 
     @Mock
     private ReservaService reservaService;
+
+    @Mock
+    private BookService bookService;
 
     @InjectMocks
     private ReservaController reservaController;
@@ -49,14 +57,24 @@ class ReservaControllerTest {
     // Crear una reserva correcto
     @Test
     void testCreateReserva() throws Exception {
-        ReservaDto reserva = new ReservaDto();
+        ReservaDto reserva = ReservaDto.builder()
+            .id("1")
+            .idUsuario("1")
+            .bookId(1)
+            .fecha("2023-10-23")
+            .descripcion("Test")
+            .build();
+
+        BookDto bookDto = new BookDto();
+        
+        when(bookService.reservarBook(any(Integer.class), anyBoolean())).thenReturn(bookDto);
         when(reservaService.createReserva(any(ReservaDto.class))).thenReturn(reserva);
 
-        mockMvc.perform(post("/reserva/create")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"idUsuario\": \"1\", \"fecha\": \"2023-10-23\", \"descripcion\": \"Test\"}"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        mockMvc.perform(post("/reserva/reservar")  // Asegúrate que esta sea la URL correcta
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"id\": \"1\", \"idUsuario\": \"1\", \"bookId\": 1, \"fecha\": \"2023-10-23\", \"descripcion\": \"Test\"}"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     // Crear una reserva con error Internal Server Error
@@ -64,7 +82,7 @@ class ReservaControllerTest {
     void testCreateReservaInternalServerError() throws Exception {
         when(reservaService.createReserva(any(ReservaDto.class))).thenThrow(new IllegalArgumentException());
 
-        mockMvc.perform(post("/reserva/create")
+        mockMvc.perform(post("/reserva/reservar")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"idUsuario\": \"1\", \"fecha\": \"2023-10-23\", \"descripcion\": \"Test\"}"))
                 .andExpect(status().isInternalServerError());
@@ -139,6 +157,30 @@ class ReservaControllerTest {
         doThrow(new IllegalArgumentException("Invalid ID")).when(reservaService).deleteReserva(anyString());
 
         mockMvc.perform(delete("/reserva/delete/123"))
+                .andExpect(status().isInternalServerError());
+    }
+
+    // Devolver un libro correctamente
+    @Test
+    void testDevolver() throws Exception {
+        BookDto bookDto = new BookDto();
+        when(bookService.reservarBook(anyInt(), eq(false))).thenReturn(bookDto);
+
+        mockMvc.perform(post("/reserva/devolver")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"bookId\": 1}"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    // Devolver un libro con error de servidor
+    @Test
+    void testDevolverServerError() throws Exception {
+        when(bookService.reservarBook(anyInt(), eq(false))).thenThrow(new RuntimeException("Error al devolver el libro"));
+
+        mockMvc.perform(post("/reserva/devolver")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"bookId\": 1}"))
                 .andExpect(status().isInternalServerError());
     }
 }
