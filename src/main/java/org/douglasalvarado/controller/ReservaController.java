@@ -1,42 +1,25 @@
 package org.douglasalvarado.controller;
 
-import org.douglasalvarado.dto.BookDto;
-import org.douglasalvarado.dto.CancelBookDto;
 import org.douglasalvarado.dto.ReservaDto;
-import org.douglasalvarado.service.BookService;
-import org.douglasalvarado.service.ReservaService;
+import org.douglasalvarado.service.ReservaDatabaseServiceSelector;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/reserva")
 @RequiredArgsConstructor
 public class ReservaController {
 
-    private final ReservaService reservaService;
-    private final BookService bookService;
+    private final ReservaDatabaseServiceSelector serviceSelector;
 
     @PostMapping("/reservar")
-    public ResponseEntity<ReservaDto> createReserva(@RequestBody ReservaDto reserva) {
+    public ResponseEntity<ReservaDto> createReserva(@RequestBody ReservaDto reservaDto) {
         try {
-            bookService.reservarBook(reserva.getBookId(), true);
-            ReservaDto createdReserva = reservaService.createReserva(reserva);
+            ReservaDto createdReserva = serviceSelector.getReservaService().createReserva(reservaDto);
             return ResponseEntity.ok(createdReserva);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).build();
-        }
-    }
-
-    @PostMapping("/devolver")
-    public ResponseEntity<BookDto> updateReserva(@RequestBody CancelBookDto calcelBook) {
-        try {
-            BookDto bookDto = bookService.reservarBook(calcelBook.getBookId(), false);
-            return ResponseEntity.ok(bookDto);
         } catch (Exception e) {
             return ResponseEntity.status(500).build();
         }
@@ -44,34 +27,30 @@ public class ReservaController {
 
     @GetMapping("/find-by/{id}")
     public ResponseEntity<ReservaDto> getReserva(@PathVariable String id) {
-        Optional<ReservaDto> reserva = Optional.ofNullable(reservaService.getReserva(id));
-        return reserva.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.status(404).body(null));
+        ReservaDto reserva = serviceSelector.getReservaService().getReserva(id);
+        return reserva != null ? ResponseEntity.ok(reserva) : ResponseEntity.status(404).build();
     }
 
     @GetMapping("/list")
     public ResponseEntity<List<ReservaDto>> getAllReservas() {
-        List<ReservaDto> reservas = reservaService.getAllReservas();
+        List<ReservaDto> reservas = serviceSelector.getReservaService().getAllReservas();
         return ResponseEntity.ok(reservas);
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<ReservaDto> updateReserva(@PathVariable String id, @RequestBody ReservaDto reserva) {
+    public ResponseEntity<ReservaDto> updateReserva(@PathVariable String id, @RequestBody ReservaDto reservaDto) {
         try {
-            ReservaDto updatedReserva = reservaService.updateReserva(id, reserva);
-            return ResponseEntity.ok(updatedReserva);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(400).build();
+            ReservaDto updatedReserva = serviceSelector.getReservaService().updateReserva(id, reservaDto);
+            return updatedReserva != null ? ResponseEntity.ok(updatedReserva) : ResponseEntity.status(404).build();
         } catch (Exception e) {
             return ResponseEntity.status(500).build();
         }
     }
 
-
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteReserva(@PathVariable String id) {
         try {
-            reservaService.deleteReserva(id);
+            serviceSelector.getReservaService().deleteReserva(id);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.status(500).build();

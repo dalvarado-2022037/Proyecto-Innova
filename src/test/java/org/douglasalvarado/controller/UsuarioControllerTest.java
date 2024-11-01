@@ -1,7 +1,9 @@
 package org.douglasalvarado.controller;
 
 import org.douglasalvarado.dto.UsuarioDto;
-import org.douglasalvarado.service.UsuarioService;
+import org.douglasalvarado.interfaces.UsuarioService;
+import org.douglasalvarado.service.UsuarioDatabaseServiceSelector;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -10,123 +12,132 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.Arrays;
 import java.util.List;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class UsuarioControllerTest {
 
-    @Mock
-    private UsuarioService usuarioService;
+        @Mock
+        private UsuarioDatabaseServiceSelector usuarioServiceSelector;
 
-    @InjectMocks
-    private UsuarioController usuarioController;
+        @InjectMocks
+        private UsuarioController usuarioController;
 
-    private MockMvc mockMvc;
+        @Mock
+        private UsuarioService usuarioService;
 
-    public UsuarioControllerTest() {
-        MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(usuarioController).build();
-    }
+        private MockMvc mockMvc;
 
-    // Obtener todos los usuarios correcto
-    @Test
-    void testGetAllUsuarios() throws Exception {
-        List<UsuarioDto> usuarios = Arrays.asList(new UsuarioDto(), new UsuarioDto());
-        when(usuarioService.getAllUsuarios()).thenReturn(usuarios);
+        @BeforeEach
+        public void setup() {
+                MockitoAnnotations.openMocks(this);
+                when(usuarioServiceSelector.getUsuarioService()).thenReturn(usuarioService);
+                mockMvc = MockMvcBuilders.standaloneSetup(usuarioController).build();
+        }
 
-        mockMvc.perform(get("/usuario/list"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-    }
+        // Test para crear un usuario exitosamente
+        @Test
+        void testCreateUsuario() throws Exception {
+                UsuarioDto usuarioDto = new UsuarioDto((long)1, "Test User", "test@test.com", "hashed_password");
 
-    // Crear un usuario correcto
-    @Test
-    void testCreateUsuario() throws Exception {
-        UsuarioDto usuarioDto = new UsuarioDto();
-        when(usuarioService.createUsuario(any(UsuarioDto.class))).thenReturn(usuarioDto);
+                when(usuarioServiceSelector.getUsuarioService().createUsuario(any(UsuarioDto.class)))
+                                .thenReturn(usuarioDto);
 
-        mockMvc.perform(post("/usuario/create")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"nombre\": \"valor\", \"correo\": \"email@example.com\", \"password\": \"12345\"}"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-    }
+                mockMvc.perform(post("/usuario/create")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"nombre\": \"Test User\", \"correo\": \"test@test.com\", \"password\": \"hashed_password\"}"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.nombre").value("Test User"))
+                                .andExpect(jsonPath("$.correo").value("test@test.com"));
+        }
 
-    // Crear un usuario Internal Server Error
-    @Test
-    void testCreateUsuarioServerError() throws Exception {
-        when(usuarioService.createUsuario(any(UsuarioDto.class)))
-                .thenThrow(new RuntimeException("Error al crear el usuario"));
+        // Test para obtener un usuario por ID exitosamente
+        @Test
+        void testGetUsuario() throws Exception {
+                UsuarioDto usuarioDto = new UsuarioDto((long)1, "Test User", "test@test.com", "hashed_password");
 
-        mockMvc.perform(post("/usuario/create")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"nombre\": \"valor\", \"correo\": \"email@example.com\", \"password\": \"12345\"}"))
-                .andExpect(status().isInternalServerError());
-    }
+                when(usuarioServiceSelector.getUsuarioService().getUsuario((long)1)).thenReturn(usuarioDto);
 
-    // Buscar un usuario por id Not Found
-    @Test
-    void testGetUsuarioByIdNotFound() throws Exception {
-        when(usuarioService.getUsuario(any(String.class))).thenReturn(null);
+                mockMvc.perform(get("/usuario/find-by/1"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.nombre").value("Test User"))
+                                .andExpect(jsonPath("$.correo").value("test@test.com"));
+        }
 
-        mockMvc.perform(get("/usuario/find-by/123"))
-                .andExpect(status().isNotFound());
-    }
+        // Test para obtener un usuario que no existe
+        @Test
+        void testGetUsuarioNotFound() throws Exception {
+                when(usuarioServiceSelector.getUsuarioService().getUsuario((long)2)).thenReturn(null);
 
-    // Actualizar un usuario correcto
-    @Test
-    void testUpdateUsuario() throws Exception {
-        UsuarioDto updatedUsuario = new UsuarioDto();
-        when(usuarioService.updateUsuario(any(String.class), any(UsuarioDto.class))).thenReturn(updatedUsuario);
+                mockMvc.perform(get("/usuario/find-by/2"))
+                                .andExpect(status().isNotFound());
+        }
 
-        mockMvc.perform(put("/usuario/update/123")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"nombre\": \"nuevo\", \"correo\": \"email@example.com\", \"password\": \"12345\"}"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-    }
+        // Test para listar todos los usuarios exitosamente
+        @Test
+        void testGetAllUsuarios() throws Exception {
+                List<UsuarioDto> usuarios = List.of(
+                                new UsuarioDto((long)1, "User One", "one@test.com", "password1"),
+                                new UsuarioDto((long)1, "User Two", "two@test.com", "password2"));
 
-    // Actualizar un usuario Bad Request
-    @Test
-    void testUpdateUsuarioBadRequest() throws Exception {
-        when(usuarioService.updateUsuario(any(String.class), any(UsuarioDto.class)))
-                .thenThrow(new IllegalArgumentException());
+                when(usuarioServiceSelector.getUsuarioService().getAllUsuarios()).thenReturn(usuarios);
 
-        mockMvc.perform(put("/usuario/update/123")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"nombre\": \"nuevo\", \"correo\": \"email@example.com\", \"password\": \"12345\"}"))
-                .andExpect(status().isBadRequest());
-    }
+                mockMvc.perform(get("/usuario/list"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.size()").value(2))
+                                .andExpect(jsonPath("$[0].nombre").value("User One"))
+                                .andExpect(jsonPath("$[1].nombre").value("User Two"));
+        }
 
-    // Actualizar un usuario Internal Server Error
-    @Test
-    void testUpdateUsuarioServerError() throws Exception {
-        when(usuarioService.updateUsuario(any(String.class), any(UsuarioDto.class)))
-                .thenThrow(new RuntimeException("Error al actualizar el usuario"));
+        // Test para actualizar un usuario exitosamente
+        @Test
+        void testUpdateUsuario() throws Exception {
+                UsuarioDto updatedUsuario = new UsuarioDto((long)1, "Updated User", "updated@test.com", "new_password");
 
-        mockMvc.perform(put("/usuario/update/123")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"nombre\": \"nuevo\", \"correo\": \"email@example.com\", \"password\": \"12345\"}"))
-                .andExpect(status().isInternalServerError());
-    }
+                when(usuarioServiceSelector.getUsuarioService().updateUsuario(anyLong(), any(UsuarioDto.class)))
+                                .thenReturn(updatedUsuario);
 
-    // Eliminar un usuario correcto
-    @Test
-    void testDeleteUsuario() throws Exception {
-        mockMvc.perform(delete("/usuario/delete/123"))
-                .andExpect(status().isOk());
-    }
+                mockMvc.perform(put("/usuario/update/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"nombre\": \"Updated User\", \"correo\": \"updated@test.com\", \"password\": \"new_password\"}"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.nombre").value("Updated User"))
+                                .andExpect(jsonPath("$.correo").value("updated@test.com"));
+        }
 
-    // Eliminar un usuario Internal Server Error
-    @Test
-    void testDeleteUsuarioServerError() throws Exception {
-        doThrow(new RuntimeException()).when(usuarioService).deleteUsuario(any(String.class));
+        // Test para fallo en la actualización cuando se proporciona un ID inválido
+        @Test
+        void testUpdateUsuarioInvalidId() throws Exception {
+                UsuarioService usuarioServiceMock = mock(UsuarioService.class);
 
-        mockMvc.perform(delete("/usuario/delete/123"))
-                .andExpect(status().isInternalServerError());
-    }
+                when(usuarioServiceSelector.getUsuarioService()).thenReturn(usuarioServiceMock);
+
+                when(usuarioServiceMock.updateUsuario(anyLong(), any(UsuarioDto.class)))
+                                .thenThrow(new IllegalArgumentException("Invalid ID"));
+
+                mockMvc.perform(put("/usuario/update/invalid-id")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"nombre\": \"User\", \"correo\": \"user@test.com\", \"password\": \"password\"}"))
+                                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void testDeleteUsuario() throws Exception {
+                UsuarioService usuarioServiceMock = mock(UsuarioService.class);
+
+                when(usuarioServiceSelector.getUsuarioService()).thenReturn(usuarioServiceMock);
+
+                doNothing().when(usuarioServiceMock).deleteUsuario((long)1);
+
+                mockMvc.perform(delete("/usuario/delete/1"))
+                                .andExpect(status().isOk());
+        }
+
 }

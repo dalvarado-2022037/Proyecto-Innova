@@ -3,7 +3,7 @@ package org.douglasalvarado.controller;
 import org.douglasalvarado.dto.LoginDto;
 import org.douglasalvarado.dto.RegisterDto;
 import org.douglasalvarado.dto.UsuarioDto;
-import org.douglasalvarado.service.UsuarioService;
+import org.douglasalvarado.service.UsuarioDatabaseServiceSelector;
 import org.douglasalvarado.util.JWTUtil;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -12,7 +12,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -23,7 +22,7 @@ public class AuthenticationController {
 
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
-    private final UsuarioService usuarioService;
+    private final UsuarioDatabaseServiceSelector usuarioServiceSelector;
     private final JWTUtil jwtUtil;
 
     @PostMapping("/login")
@@ -39,20 +38,23 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody RegisterDto registerDto) {
+        var usuarioService = usuarioServiceSelector.getUsuarioService();
+
         if (usuarioService.existsByCorreo(registerDto.getEmail())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists!"); 
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists!");
         }
 
         if (!registerDto.getPassword().equals(registerDto.getConfirmPassword())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Passwords do not match!"); 
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Passwords do not match!");
         }
 
         String encodedPassword = passwordEncoder.encode(registerDto.getPassword());
 
-        UsuarioDto newUser = new UsuarioDto();
-        newUser.setNombre(registerDto.getName());
-        newUser.setCorreo(registerDto.getEmail());
-        newUser.setPassword(encodedPassword);
+        UsuarioDto newUser = UsuarioDto.builder()
+                .nombre(registerDto.getName())
+                .correo(registerDto.getEmail())
+                .password(encodedPassword)
+                .build();
         usuarioService.createUsuario(newUser);
 
         return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully!");

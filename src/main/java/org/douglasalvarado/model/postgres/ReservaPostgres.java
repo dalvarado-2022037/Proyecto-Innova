@@ -1,4 +1,4 @@
-package org.douglasalvarado.model;
+package org.douglasalvarado.model.postgres;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,18 +10,18 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Data
 @Entity
-@Table(name = "book")
-public class Book {
+@Table(name = "reserva") // Tabla en PostgreSQL
+public class ReservaPostgres {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String title;
-    private String author;
-    private String isbn;
-    private Boolean available;
+    private String idUsuario;
+    private Integer bookId;
+    private String fecha; 
+    private String descripcion;
 }

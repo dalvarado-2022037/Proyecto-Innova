@@ -1,25 +1,25 @@
 package org.douglasalvarado.controller;
 
 import org.douglasalvarado.dto.UsuarioDto;
-import org.douglasalvarado.service.UsuarioService;
+import org.douglasalvarado.service.UsuarioDatabaseServiceSelector;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import lombok.RequiredArgsConstructor;
 
+import lombok.RequiredArgsConstructor;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/usuario")
 @RequiredArgsConstructor
 public class UsuarioController {
 
-    private final UsuarioService usuarioService;
+    private final UsuarioDatabaseServiceSelector usuarioServiceSelector;
 
     @PostMapping("/create")
-    public ResponseEntity<UsuarioDto> createUsuario(@RequestBody UsuarioDto usuariodDto) {
+    public ResponseEntity<UsuarioDto> createUsuario(@RequestBody UsuarioDto usuarioDto) {
         try {
-            UsuarioDto createdUsuario = usuarioService.createUsuario(usuariodDto);
+            UsuarioDto createdUsuario = usuarioServiceSelector.getUsuarioService().createUsuario(usuarioDto);
             return ResponseEntity.ok(createdUsuario);
         } catch (Exception e) {
             return ResponseEntity.status(500).build();
@@ -27,22 +27,26 @@ public class UsuarioController {
     }
 
     @GetMapping("/find-by/{id}")
-    public ResponseEntity<UsuarioDto> getUsuario(@PathVariable String id) {
-        Optional<UsuarioDto> usuario = Optional.ofNullable(usuarioService.getUsuario(id));
-        return usuario.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.status(404).build());
+    public ResponseEntity<UsuarioDto> getUsuario(@PathVariable Long id) {
+        UsuarioDto usuario = usuarioServiceSelector.getUsuarioService().getUsuario(id);
+        if (usuario != null) {
+            return ResponseEntity.ok(usuario);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
+
 
     @GetMapping("/list")
     public ResponseEntity<List<UsuarioDto>> getAllUsuarios() {
-        List<UsuarioDto> usuarios = usuarioService.getAllUsuarios();
+        List<UsuarioDto> usuarios = usuarioServiceSelector.getUsuarioService().getAllUsuarios();
         return ResponseEntity.ok(usuarios);
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<UsuarioDto> updateUsuario(@PathVariable String id, @RequestBody UsuarioDto usuario) {
+    public ResponseEntity<UsuarioDto> updateUsuario(@PathVariable Long id, @RequestBody UsuarioDto usuario) {
         try {
-            UsuarioDto updatedUsuario = usuarioService.updateUsuario(id, usuario);
+            UsuarioDto updatedUsuario = usuarioServiceSelector.getUsuarioService().updateUsuario(id, usuario);
             return ResponseEntity.ok(updatedUsuario);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -52,9 +56,9 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> deleteUsuario(@PathVariable String id) {
+    public ResponseEntity<Void> deleteUsuario(@PathVariable Long id) {
         try {
-            usuarioService.deleteUsuario(id);
+            usuarioServiceSelector.getUsuarioService().deleteUsuario(id);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.status(500).build();

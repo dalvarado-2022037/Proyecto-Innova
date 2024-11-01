@@ -10,8 +10,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class UsuarioDto {
-    private String id;
+    private Long id;
     private String nombre;
     private String correo;
     private String password;
+    public Object map(Object object) {
+        throw new UnsupportedOperationException("Unimplemented method 'map'");
+    }
 }

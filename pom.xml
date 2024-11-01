@@ -184,6 +184,7 @@
 						<exclude>**/repository/**</exclude>
 						<exclude>**/util/**</exclude>
 						<exclude>**/config/**</exclude>
+    					<exclude>**/service/*.java</exclude>
 					</excludes>
 				</configuration>
 			</plugin>

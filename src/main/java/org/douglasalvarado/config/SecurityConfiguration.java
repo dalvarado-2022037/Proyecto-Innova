@@ -28,6 +28,7 @@ public class SecurityConfiguration {
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/javainuse-openapi/**").permitAll()
                 .requestMatchers("/authentication/**").permitAll()
+                .requestMatchers("/authentication/**").permitAll()
                 .requestMatchers("/authentication/register", "/authentication/login").permitAll()
                 .requestMatchers("/health").permitAll()
                 .anyRequest().authenticated())

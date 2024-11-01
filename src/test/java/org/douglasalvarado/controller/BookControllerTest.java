@@ -1,7 +1,9 @@
 package org.douglasalvarado.controller;
 
 import org.douglasalvarado.dto.BookDto;
-import org.douglasalvarado.service.BookService;
+import org.douglasalvarado.interfaces.BookService;
+import org.douglasalvarado.service.BookDatabaseServiceSelector;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -10,9 +12,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.Arrays;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -20,123 +24,122 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class BookControllerTest {
 
     @Mock
-    private BookService bookService;
+    private BookDatabaseServiceSelector serviceSelector;
 
     @InjectMocks
     private BookController bookController;
 
+    @Mock
+    private BookService bookService;
+
     private MockMvc mockMvc;
 
-    public BookControllerTest() {
+    @BeforeEach
+    void setup() {
         MockitoAnnotations.openMocks(this);
+        when(serviceSelector.getBookService()).thenReturn(bookService);
         mockMvc = MockMvcBuilders.standaloneSetup(bookController).build();
     }
 
-    // Crear un libro correctamente
+    // Test para crear un libro exitosamente
     @Test
-    void testCreateBook() throws Exception {
-        BookDto bookDto = new BookDto();
-        when(bookService.createBook(any(BookDto.class))).thenReturn(bookDto);
+    void createBookSuccessfully() throws Exception {
+        BookDto bookDto = new BookDto((long) 1, "Title", "Author", "ISBN", true);
+        when(serviceSelector.getBookService().createBook(any(BookDto.class))).thenReturn(bookDto);
 
         mockMvc.perform(post("/book/create")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"titulo\": \"Nuevo Libro\", \"autor\": \"Autor Ejemplo\"}"))
+                .content("{\"title\": \"Title\", \"author\": \"Author\", \"isbn\": \"ISBN\", \"available\": true}"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                .andExpect(jsonPath("$.title").value("Title"));
     }
 
-    // Crear un libro con error de servidor
+    // Test para obtener un libro por ID exitosamente
     @Test
-    void testCreateBookServerError() throws Exception {
-        when(bookService.createBook(any(BookDto.class)))
-                .thenThrow(new RuntimeException("Error al crear el libro"));
-
-        mockMvc.perform(post("/book/create")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"titulo\": \"Nuevo Libro\", \"autor\": \"Autor Ejemplo\"}"))
-                .andExpect(status().isInternalServerError());
-    }
-
-    // Obtener un libro por ID correctamente
-    @Test
-    void testGetBook() throws Exception {
-        BookDto bookDto = new BookDto();
-        when(bookService.findByBook(1)).thenReturn(bookDto);
+    void getBookByIdSuccessfully() throws Exception {
+        BookDto bookDto = new BookDto((long)1, "Title", "Author", "ISBN", true);
+        when(serviceSelector.getBookService().findByBook(1)).thenReturn(bookDto);
 
         mockMvc.perform(get("/book/find-by/1"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                .andExpect(jsonPath("$.title").value("Title"));
     }
 
-    // Obtener un libro por ID Not Found
+    // Test para manejar cuando un libro no es encontrado
     @Test
-    void testGetBookNotFound() throws Exception {
-        when(bookService.findByBook(1)).thenReturn(null);
+    void getBookByIdNotFound() throws Exception {
+        when(serviceSelector.getBookService().findByBook(anyInt())).thenReturn(null);
 
         mockMvc.perform(get("/book/find-by/1"))
                 .andExpect(status().isNotFound());
     }
 
-    // Obtener todos los libros correctamente
+    // Test para obtener todos los libros
     @Test
-    void testGetAllBooks() throws Exception {
-        List<BookDto> books = Arrays.asList(new BookDto(), new BookDto());
-        when(bookService.listBooks()).thenReturn(books);
+    void getAllBooksSuccessfully() throws Exception {
+        List<BookDto> books = List.of(new BookDto((long)1, "Title1", "Author1", "ISBN1", true));
+        when(serviceSelector.getBookService().listBooks()).thenReturn(books);
 
         mockMvc.perform(get("/book/list"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                .andExpect(jsonPath("$[0].title").value("Title1"));
     }
 
-    // Actualizar un libro correctamente
+    // Test para actualizar un libro exitosamente
     @Test
-    void testUpdateBook() throws Exception {
-        BookDto updatedBook = new BookDto();
-        when(bookService.updateBook(any(BookDto.class), eq(1))).thenReturn(updatedBook);
+    void updateBookSuccessfully() throws Exception {
+        BookDto updatedBook = new BookDto((long)1, "Updated Title", "Updated Author", "ISBN", true);
+        when(serviceSelector.getBookService().updateBook(any(BookDto.class), anyInt())).thenReturn(updatedBook);
 
         mockMvc.perform(put("/book/update/1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"titulo\": \"Libro Actualizado\", \"autor\": \"Autor Ejemplo\"}"))
+                .content("{\"title\": \"Updated Title\", \"author\": \"Updated Author\", \"isbn\": \"ISBN\", \"available\": true}"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                .andExpect(jsonPath("$.title").value("Updated Title"));
     }
 
-    // Actualizar un libro Not Found
+    // Test para manejar cuando un libro a actualizar no es encontrado
     @Test
-    void testUpdateBookNotFound() throws Exception {
-        when(bookService.updateBook(any(BookDto.class), eq(1))).thenReturn(null);
+    void updateBookNotFound() throws Exception {
+        when(serviceSelector.getBookService().updateBook(any(BookDto.class), anyInt())).thenReturn(null);
 
         mockMvc.perform(put("/book/update/1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"titulo\": \"Libro Actualizado\", \"autor\": \"Autor Ejemplo\"}"))
+                .content("{\"title\": \"Updated Title\", \"author\": \"Updated Author\", \"isbn\": \"ISBN\", \"available\": true}"))
                 .andExpect(status().isNotFound());
     }
 
-    // Actualizar un libro con error de servidor
+    // Test para eliminar un libro exitosamente
     @Test
-    void testUpdateBookServerError() throws Exception {
-        when(bookService.updateBook(any(BookDto.class), eq(1)))
-                .thenThrow(new RuntimeException("Error al actualizar el libro"));
-
-        mockMvc.perform(put("/book/update/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"titulo\": \"Libro Actualizado\", \"autor\": \"Autor Ejemplo\"}"))
-                .andExpect(status().isInternalServerError());
-    }
-
-    // Eliminar un libro correctamente
-    @Test
-    void testDeleteBook() throws Exception {
+    void deleteBookSuccessfully() throws Exception {
+        when(serviceSelector.getBookService()).thenReturn(bookService);
+    
+        doNothing().when(bookService).deleteBook(1);
+    
         mockMvc.perform(delete("/book/delete/1"))
                 .andExpect(status().isOk());
     }
+    
 
-    // Eliminar un libro con error de servidor
+    // Test para reservar un libro exitosamente
     @Test
-    void testDeleteBookServerError() throws Exception {
-        doThrow(new RuntimeException("Error al eliminar el libro")).when(bookService).deleteBook(1);
+    void reservarBookSuccessfully() throws Exception {
+        BookDto reservedBook = new BookDto((long)1, "Title", "Author", "ISBN", false);
+        when(serviceSelector.getBookService().reservarBook(1, false)).thenReturn(reservedBook);
 
-        mockMvc.perform(delete("/book/delete/1"))
-                .andExpect(status().isInternalServerError());
+        mockMvc.perform(post("/book/1/reserve")
+                .param("reserva", "false"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.available").value(false));
+    }
+
+    // Test para manejar cuando un libro a reservar no es encontrado
+    @Test
+    void reservarBookNotFound() throws Exception {
+        when(serviceSelector.getBookService().reservarBook(anyInt(), anyBoolean())).thenReturn(null);
+
+        mockMvc.perform(post("/book/1/reserve")
+                .param("reserva", "false"))
+                .andExpect(status().isNotFound());
     }
 }

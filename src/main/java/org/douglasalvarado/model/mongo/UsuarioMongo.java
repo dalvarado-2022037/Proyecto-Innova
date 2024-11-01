@@ -1,4 +1,4 @@
-package org.douglasalvarado.model;
+package org.douglasalvarado.model.mongo;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 @Document(collection = "Usuario")
-public class Usuario {
+public class UsuarioMongo {
 
     @Id
     private String id;

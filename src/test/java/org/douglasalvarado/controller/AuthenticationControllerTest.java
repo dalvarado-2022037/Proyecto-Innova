@@ -1,8 +1,10 @@
 package org.douglasalvarado.controller;
 
 import org.douglasalvarado.dto.RegisterDto;
-import org.douglasalvarado.service.UsuarioService;
+import org.douglasalvarado.interfaces.UsuarioService;
+import org.douglasalvarado.service.UsuarioDatabaseServiceSelector;
 import org.douglasalvarado.util.JWTUtil;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -10,6 +12,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -19,8 +22,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import org.springframework.security.core.AuthenticationException;
 
 class AuthenticationControllerTest {
 
@@ -34,15 +35,20 @@ class AuthenticationControllerTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
-    private UsuarioService usuarioService;
+    private UsuarioDatabaseServiceSelector usuarioServiceSelector;
 
     @InjectMocks
     private AuthenticationController authenticationController;
 
+    @Mock
+    private UsuarioService usuarioService;
+
     private MockMvc mockMvc;
 
-    public AuthenticationControllerTest() {
+    @BeforeEach
+    public void setup() {
         MockitoAnnotations.openMocks(this);
+        when(usuarioServiceSelector.getUsuarioService()).thenReturn(usuarioService);
         mockMvc = MockMvcBuilders.standaloneSetup(authenticationController).build();
     }
 
@@ -56,7 +62,7 @@ class AuthenticationControllerTest {
         mockMvc.perform(post("/authentication/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\": \"test@test.com\", \"password\": \"123456\"}"))
-                .andExpect(status().isOk()) 
+                .andExpect(status().isOk())
                 .andExpect(content().string("token"));
     }
 
@@ -65,7 +71,7 @@ class AuthenticationControllerTest {
     void testRegister() throws Exception {
         RegisterDto registerDto = new RegisterDto("Test", "test@test.com", "123456", "123456");
 
-        when(usuarioService.existsByCorreo(registerDto.getEmail())).thenReturn(false);
+        when(usuarioServiceSelector.getUsuarioService().existsByCorreo(registerDto.getEmail())).thenReturn(false);
         when(passwordEncoder.encode(registerDto.getPassword())).thenReturn("hashed_password");
 
         mockMvc.perform(post("/authentication/register")
@@ -84,7 +90,7 @@ class AuthenticationControllerTest {
         mockMvc.perform(post("/authentication/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\": \"wrong@test.com\", \"password\": \"wrongpassword\"}"))
-                .andExpect(status().isUnauthorized()) 
+                .andExpect(status().isUnauthorized())
                 .andExpect(content().string("Authentication failed!"));
     }
 
@@ -93,7 +99,7 @@ class AuthenticationControllerTest {
     void testRegisterEmailAlreadyExists() throws Exception {
         RegisterDto registerDto = new RegisterDto("Exist", "existing@test.com", "123456", "123456");
 
-        when(usuarioService.existsByCorreo(registerDto.getEmail())).thenReturn(true);
+        when(usuarioServiceSelector.getUsuarioService().existsByCorreo(registerDto.getEmail())).thenReturn(true);
 
         mockMvc.perform(post("/authentication/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -108,7 +114,7 @@ class AuthenticationControllerTest {
         mockMvc.perform(post("/authentication/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\": \"test@test.com\", \"password\": \"123456\", \"confirmPassword\": \"654321\"}"))
-                .andExpect(status().isBadRequest()) 
+                .andExpect(status().isBadRequest())
                 .andExpect(content().string("Passwords do not match!"));
     }
 }
